@@ -34,7 +34,7 @@ def main():
     creates a server socket, listens for new connections,
     and spawns a new thread whenever a new connection join
     """
-    serverPort = 12000
+    serverPort = 12022
     serverSocket = socket(AF_INET,SOCK_STREAM)
     try:
         serverSocket.bind(('',serverPort))

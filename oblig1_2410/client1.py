@@ -1,7 +1,7 @@
 from socket import *
 import sys
-serverName = '127.0.0.1'
-serverPort = 12000
+serverName = '192.168.0.2'
+serverPort = 12022
 clientSocket = socket(AF_INET, SOCK_STREAM)
 try:
     clientSocket.connect((serverName,serverPort))
