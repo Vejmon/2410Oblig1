@@ -9,24 +9,39 @@ from socket import *
 import _thread as thread
 import time
 
-def now():
+toSpillere = False
+def serverGame(con):
     """
-    returns the time of day
+    når vi har to spillere spiller vi rockPaperScissors.
     """
-    return time.ctime(time.time())
 
-def handleClient(connection):
+    while toSpillere:
+
+        con.send("venter på en spiller til".encode())
+        time.sleep(1)
+
+
+def handleClient(con):
     """
     a client handler function
     """
+    global toSpillere
     while True:
-        data = connection.recv(1024).decode()
-        print ("received  message = ", data)
-        modified_message= data.upper()
-        connection.send(modified_message.encode())
+        data = con.recv(1024).decode()
+        
+        if data == ".g":
+            print("vi vil spille")
+            if not toSpillere:
+                print("må vente")
+                toSpillere = True
+            else:
+                print("lesgo")
+                toSpillere = False
+            serverGame(con)
+
         if (data == "exit"):
             break
-    connection.close()
+    con.close()
 
 
 def main():
@@ -45,7 +60,6 @@ def main():
     while True:
         connectionSocket, addr = serverSocket.accept()
         print('Server connected by ', addr)
-        print('at ', now())
         thread.start_new_thread(handleClient, (connectionSocket,))
     serverSocket.close()
 
