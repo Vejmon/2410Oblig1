@@ -10,16 +10,19 @@ import _thread as thread
 import time
 
 toSpillere = False
+online = []
+
 def serverGame(con):
     """
     når vi har to spillere spiller vi rockPaperScissors.
     """
 
     while toSpillere:
-
         con.send("venter på en spiller til".encode())
-        time.sleep(1)
-
+        time.sleep(2.5)
+    con.send("vi er klare".encode())
+    spillerSvar = con.recv(1024).decode
+    
 
 def handleClient(con):
     """
@@ -27,8 +30,9 @@ def handleClient(con):
     """
     global toSpillere
     while True:
+        navn = con.recv(1024).decode()
         data = con.recv(1024).decode()
-        
+
         if data == ".g":
             print("vi vil spille")
             if not toSpillere:
@@ -60,6 +64,7 @@ def main():
     while True:
         connectionSocket, addr = serverSocket.accept()
         print('Server connected by ', addr)
+        #connectionSocket.
         thread.start_new_thread(handleClient, (connectionSocket,))
     serverSocket.close()
 
