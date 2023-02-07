@@ -1,0 +1,8 @@
+flere klienter skal kobles til en server,
+klientene skal få beskjed om hvem som er "online", men ikke at de selv er online.
+
+klientene skal få mulighet til å broadcaste til de andre som er online.
+
+en klient skal kunne stelle seg i kø for å spille sten/saks/papir.
+serveren skal fortelle spillerne hvem de spiller mot.
+serveren skal svare spillerne om hvem som vant.
