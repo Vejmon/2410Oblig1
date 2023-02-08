@@ -12,41 +12,126 @@ import time
 toSpillere = False
 online = []
 
-def serverGame(con):
+def serverGame(con, meg):
     """
     når vi har to spillere spiller vi rockPaperScissors.
     """
+    global online
+    global toSpillere
 
     while toSpillere:
         con.send("venter på en spiller til".encode())
         time.sleep(2.5)
-    con.send("vi er klare".encode())
-    spillerSvar = con.recv(1024).decode
-    
+    con.send("nå er vi klare".encode())
+
+    #liker ikke denne løsningen...
+    time.sleep(2.5)
+    motspiller = meg
+
+    #fjerner de to matchende spillerne fra køen.
+    for client in online:
+        if client["iKø"] == True and client != meg:
+            motspiller = client
+            client["iKø"] = False
+
+    #Sender navnet til motspilleren
+    con.send(motspiller["navn"].encode())
+
+    deGyldige = [".r",".p",".s",".f"]
+    while True:
+
+        mittValg = con.recv(1024).decode()
+        meg["valg"] = mittValg
+        if mittValg == ".f":
+            con.send("kanskje en annen gang :)".encode())
+            break
+
+        motspillerValg = motspiller["valg"]
+
+        #venter på den andre hånden
+        while motspillerValg not in deGyldige:
+            motspillerValg = motspiller["valg"]
+
+        # walkover
+        if motspillerValg == ".f":
+            con.send("du vant på walkover!".encode())
+            break
+
+        # stalemate
+        if motspillerValg == mittValg:
+            con.send("gosj, likt valg".encode())
+            motspiller["valg"] = ""
+
+        elif mittValg == ".p":
+            if motspillerValg == ".r":
+                con.send("de valgte stein, du vant!".encode())
+                break
+            elif motspillerValg == ".s":
+                con.send("desverre tapte du, de valgte saks".encode())
+                break
+
+        elif mittValg == ".r":
+            if motspillerValg == ".p":
+                con.send("desverre tapte du, de valgte papir".encode())
+                break
+            elif motspillerValg == ".s":
+                con.send("de valgte saks, du vant!".encode())
+                break
+
+        elif mittValg == ".s":
+            if motspillerValg == ".r":
+                con.send("desverre tapte du, de valgte stein".encode())
+                break
+            elif motspillerValg == ".p":
+                con.send("de valgte papir, du vant!".encode())
+                break
+    motspiller["valg"] = ""
 
 def handleClient(con):
     """
     a client handler function
     """
+    global online
     global toSpillere
-    while True:
-        navn = con.recv(1024).decode()
-        data = con.recv(1024).decode()
 
+    #ber om info fra brukeren
+    #og henter variabler fra connection.
+    ip, raddr = con.getpeername()
+    navn = con.recv(1024).decode()
+
+    #oppretter en client og setter den inn i de som er "online"
+    enClient = {
+        "navn": navn,
+        "ip": ip,
+        "raddr" : raddr,
+        "iKø" : False,
+        "valg": ""
+    }
+    online.append(enClient)
+
+    #oppretter en melding om hvem andre som er online
+    melding = "Online: "
+    for client in online:
+        if client["raddr"] != raddr:
+            melding += client["navn"] +" fra: " + client["ip"] + ", "
+    con.send(melding.encode())
+
+    while True:
+        data = con.recv(1024).decode()
         if data == ".g":
-            print("vi vil spille")
             if not toSpillere:
-                print("må vente")
+                enClient["iKø"] = True
                 toSpillere = True
             else:
-                print("lesgo")
+                enClient["iKø"] = True
                 toSpillere = False
-            serverGame(con)
 
-        if (data == "exit"):
+            serverGame(con,enClient)
+
+        if (data == ".e"):
+            online.remove(enClient)
+            con.close()
             break
-    con.close()
-
 
 def main():
     """
@@ -64,7 +149,7 @@ def main():
     while True:
         connectionSocket, addr = serverSocket.accept()
         print('Server connected by ', addr)
-        #connectionSocket.
+        #connectionSocket
         thread.start_new_thread(handleClient, (connectionSocket,))
     serverSocket.close()
 
