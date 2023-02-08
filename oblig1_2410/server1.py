@@ -11,6 +11,7 @@ import time
 
 toSpillere = False
 online = []
+meldinger = []
 
 def serverGame(con, meg):
     """
@@ -86,6 +87,7 @@ def serverGame(con, meg):
                 con.send("de valgte papir, du vant!".encode())
                 break
     motspiller["valg"] = ""
+    con.send(".t".encode())
 
 def handleClient(con):
     """
@@ -93,11 +95,14 @@ def handleClient(con):
     """
     global online
     global toSpillere
+    global meldinger
 
     #ber om info fra brukeren
     #og henter variabler fra connection.
     ip, raddr = con.getpeername()
     navn = con.recv(1024).decode()
+    if navn == ".f":
+        con.close()
 
     #oppretter en client og setter den inn i de som er "online"
     enClient = {
@@ -112,26 +117,46 @@ def handleClient(con):
     #oppretter en melding om hvem andre som er online
     melding = "Online: "
     for client in online:
-        if client["raddr"] != raddr:
+        if client != enClient:
             melding += client["navn"] +" fra: " + client["ip"] + ", "
     con.send(melding.encode())
 
+    chatPos = 0
     while True:
         data = con.recv(1024).decode()
         if data == ".g":
+            enClient["iKø"] = True
             if not toSpillere:
-                enClient["iKø"] = True
                 toSpillere = True
             else:
-                enClient["iKø"] = True
                 toSpillere = False
-
             serverGame(con,enClient)
 
-        if (data == ".e"):
+        #avslutter
+        elif (data == ".e"):
             online.remove(enClient)
             con.close()
             break
+
+        #legger meldingen i listen over meldinger,hvis den ikke er tom.
+        elif data != ".t":
+            enMelding  = {
+                "id": len(meldinger),
+                "navn": enClient["navn"],
+                "raddr": enClient["raddr"],
+                "mld": data
+            }
+            meldinger.append(enMelding)
+        else:
+            mld = ""
+            skalUt = range(chatPos,len(meldinger))
+            for i in skalUt:
+                if meldinger[i]["raddr"] != enClient["raddr"]:
+                    mld += meldinger[i]["navn"]+"\n"+meldinger[i]["mld"]+"\n"
+            if mld != "":
+                con.send(mld.encode())
+            else:
+                con.send(".t".encode())
 
 def main():
     """
