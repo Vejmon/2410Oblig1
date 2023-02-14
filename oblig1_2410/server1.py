@@ -151,6 +151,7 @@ def handleClient(con):
             mld = ""
             skalUt = range(chatPos,len(meldinger))
             for i in skalUt:
+                chatPos += 1
                 if meldinger[i]["raddr"] != enClient["raddr"]:
                     mld += meldinger[i]["navn"]+"\n"+meldinger[i]["mld"]+"\n"
             if mld != "":
@@ -169,7 +170,7 @@ def main():
         serverSocket.bind(('',serverPort))
     except:
         print("Bind failed. Error : ")
-    serverSocket.listen(1)
+    serverSocket.listen(9)
     print ('The server is ready to receive')
     while True:
         connectionSocket, addr = serverSocket.accept()
