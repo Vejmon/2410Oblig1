@@ -25,30 +25,38 @@ def handleClient(connection, addr):
 	"""
 	a client handler function 
 	"""
-	# this is where we broadcast everyone that a new client has joined
+	#motd to new user, with online users.
+	msg = "Welcome!\nOnline users: "
+	for client in all_client_connections:
+		msg += format(client.getpeername()) + ", "
+	connection.send(msg.encode())
 
-	connection.send("Welcome!".encode())		# Sends a welcome message to the client
+	#add the new user to list of connected users
 	all_client_connections.append(connection)		# Appends the new connection to the list off all clients
-	newJoin = f"{addr} has just joined"		# Message to inform others that a new client has joined
-	broadcast(connection, newJoin)		# Broadcast the join-message
+	#newJoin = f"{addr} has just joined"		# Message to inform others that a new client has joined
+	broadcast(connection, "--has joined--", addr)		# Broadcast the join-message
 
 	while True:
 		message = connection.recv(2048).decode()		# Recieve the message from client
 		print(now() + " " + str(addr) + "#  ", message)
-		if message.strip() == "exit" or not message:		# Close connection if client sends exit or there isn't a message
+
+		# Close connection if client sends exit or there isn't a message
+		if message.strip() == "exit" or len(message) == 1 or not message:
 			break
 		else:
 			# broadcast this message to the others
-			broadcast(connection, message)
+			broadcast(connection, message, addr)
+	broadcast(connection, "--has left--", addr)
 	connection.close()
 	all_client_connections.remove(connection)
 
 
-def broadcast(connection, message):
+def broadcast(connection, message, addr):
 	print("Broadcasting")
+	utMessage = "\n" + now() + f" {addr}: \n" + message
 	for client in all_client_connections:		# Broadcast the message to everyone except the client who sent it
 		if client != connection:
-			client.send(message.encode())
+			client.send(utMessage.encode())
 
 
 def main():

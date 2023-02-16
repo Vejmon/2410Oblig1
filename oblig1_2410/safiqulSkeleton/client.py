@@ -42,4 +42,10 @@ while True:
 			message = sys.stdin.readline()
 			# send a message to the server
 			client_socket.send(message.encode())
+
+			#avslutter på client siden etter at "exit" er blitt sendt
+			if message.strip() == "exit" or len(message) == 1:
+				client_socket.close()
+				sys.exit()
+
 client_socket.close()
